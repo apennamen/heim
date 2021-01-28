@@ -24,6 +24,7 @@ smol = "~1.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 ntapi = "~0.3"
+wmi = { path = "../../wmi-rs", features = ["async-query"] }
 
 [target.'cfg(target_os = "windows")'.dependencies.winapi]
 version = ">=0.3.8"
