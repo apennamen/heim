@@ -1,7 +1,10 @@
 use std::io;
+use std::fmt;
 
 use heim_common::prelude::*;
 use heim_common::units::{frequency, Frequency};
+
+use wmi::{COMLibrary, WMIConnection};
 
 use super::bindings::power::{self, PROCESSOR_POWER_INFORMATION};
 
@@ -43,6 +46,39 @@ impl FreqStrategy for WinternlStrategy {
     }
 }
 
+struct WMIStrategy {
+    con: WMIConnection,
+}
+
+impl fmt::Debug for WMIStrategy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WMIStrategy")
+         .finish()
+    }
+}
+
+impl WMIStrategy {
+    pub fn new() -> Result<WMIStrategy> {
+        let com_con = COMLibrary::new()?;
+        let con = WMIConnection::new(com_con.into())?;
+        Ok(WMIStrategy { con })
+    }
+}
+
+impl FreqStrategy for WMIStrategy { 
+    fn current(&self) -> Frequency {
+        Frequency::new::<frequency::megahertz>(0)
+    }
+
+    fn max(&self) -> Option<Frequency> {
+        None
+    }
+
+    fn min(&self) -> Option<Frequency> {
+        None
+    }
+}
+
 #[derive(Debug)]
 pub struct CpuFrequency {
     // We use trait object to represent the abstract strategy
@@ -65,6 +101,15 @@ impl CpuFrequency {
 
 pub async fn frequency() -> Result<CpuFrequency> {
     let strategy = WinternlStrategy::new().await?;
+
+    /* Replace with this
+    let strategy = WMIStrategy::new();
+
+    let strategy = match strategy {
+        Ok(s) => s,
+        Err(e) => WinternlStrategy::new().await?,
+    };
+    */
 
     Ok(CpuFrequency { strategy: Box::new(strategy) })
 }

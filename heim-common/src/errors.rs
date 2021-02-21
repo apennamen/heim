@@ -372,3 +372,12 @@ impl From<nix::Error> for Error {
         Error::from(inner)
     }
 }
+
+#[cfg(windows)]
+impl From<wmi::utils::WMIError> for Error {
+    fn from(e: wmi::utils::WMIError) -> Self {
+        let inner = io::Error::new(io::ErrorKind::Other, e);
+
+        Error::from(inner)
+    }
+}
